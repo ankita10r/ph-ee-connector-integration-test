@@ -7,7 +7,12 @@ import io.cucumber.java.en.When;
 import io.restassured.RestAssured;
 import io.restassured.builder.ResponseSpecBuilder;
 import io.restassured.specification.RequestSpecification;
+import org.json.JSONException;
+import org.json.JSONObject;
+import org.mifos.integrationtest.common.CollectionHelper;
 import org.mifos.integrationtest.common.Utils;
+import org.mifos.integrationtest.config.BulkProcessorConfig;
+import org.springframework.beans.factory.annotation.Autowired;
 
 import java.io.File;
 import java.util.UUID;
@@ -15,6 +20,9 @@ import java.util.UUID;
 import static com.google.common.truth.Truth.assertThat;
 
 public class BatchApiStepDef extends BaseStepDef {
+
+    @Autowired
+    BulkProcessorConfig bulkProcessorConfig;
 
     @Given("I have a batch with id {string}")
     public void setBatchId(String batchId) {
@@ -99,4 +107,38 @@ public class BatchApiStepDef extends BaseStepDef {
         System.out.println(file.exists());
     }
 
+    @When("I should call callbackUrl api")
+    public void iShouldCallCallbackUrlApi() throws JSONException {
+        RequestSpecification requestSpec = Utils.getDefaultSpec(BaseStepDef.tenant);
+        String callbackReq = new String("The Batch Aggregation API was complete");
+        logger.info(callbackReq);
+
+        BaseStepDef.statusCode = RestAssured.given(requestSpec)
+                .body(callbackReq)
+                .post(bulkProcessorConfig.getCallbackUrl())
+                .andReturn().getStatusCode();
+    }
+
+    @And("I have callbackUrl as {string}")
+    public void iHaveCallbackUrlAs(String callBackUrl) {
+        assertThat(callBackUrl).isNotEmpty();
+        bulkProcessorConfig.setCallbackUrl(callBackUrl);
+    }
+
+    @Then("I should get expected status of {int}")
+    public void iShouldGetExpectedStatusOf(int expectedStatus) throws JSONException {
+        assertThat(BaseStepDef.statusCode ).isNotNull();
+        assertThat(BaseStepDef.statusCode).isEqualTo(expectedStatus);
+        if(expectedStatus!= 200){
+            bulkProcessorConfig.setRetryCount(bulkProcessorConfig.getRetryCount()-1);
+            iShouldCallCallbackUrlApi();
+        }
+
+    }
+
+    @And("I have retry count as {int}")
+    public void iHaveRetryCountAs(int retryCount) {
+        assertThat(retryCount).isNotNull();
+        bulkProcessorConfig.setRetryCount(retryCount);
+    }
 }

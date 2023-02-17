@@ -24,3 +24,5 @@ channel-connector:
 
 defaults:
   tenant: "gorilla"
+
+callback_url: "http://localhost:5001/simulate"

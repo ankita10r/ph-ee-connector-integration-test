@@ -21,8 +21,15 @@ channel-connector:
   contactpoint: "https://channel.sandbox.fynarfin.io"
   endpoints:
     transfer: "/channel/transfer"
+  collection:
+    variables:
+      - ams
+      - partyLookupFailed
+      - transactionId
+
 
 defaults:
   tenant: "gorilla"
 
 callback_url: "http://localhost:5001/simulate"
+

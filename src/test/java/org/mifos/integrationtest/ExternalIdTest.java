@@ -41,7 +41,7 @@ public class ExternalIdTest {
         JSONObject collectionRequestBody = CollectionHelper.getCollectionRequestBody("1", "254708374149", "24450523");
         System.out.println(collectionRequestBody);
         String json = RestAssured.given(requestSpec)
-                .baseUri("http://localhost:5002")
+                .baseUri("http://localhost:5001")
                 .body(collectionRequestBody.toString())
                 .expect()
                 .spec(statusOkResponseSpec)
@@ -61,7 +61,7 @@ public class ExternalIdTest {
         RequestSpecification localSpec = requestSpec;
         localSpec.queryParam("transactionId", this.transactionId);
         String json = RestAssured.given(localSpec)
-                .baseUri("http://localhost:5000")
+                .baseUri("http://localhost:5002")
                 .expect()
                 .spec(statusOkResponseSpec)
                 .when()

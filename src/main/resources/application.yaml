@@ -23,8 +23,8 @@ channel-connector:
   contactpoint: "https://channel.sandbox.fynarfin.io"
   endpoints:
     transfer: "/channel/transfer"
-    gsma-p2p: "/channel/gsma/transfer"
     collection: "/channel/collection"
+    endpoint: "/channel/gsma/transaction"
 
 max-retry-count: 5
 retry-interval: 15000
@@ -34,9 +34,9 @@ defaults:
   authorization: "Basic bWlmb3M6cGFzc3dvcmQ="
 
 
-channel:
+gsmachannel:
   base-url: https://channel.sandbox.fynarfin.io
-  endpoint: /channel/gsma/transaction
+  gsma-p2p: "/channel/gsma/transfer"
 
 loan:
   base-url: https://fynams.sandbox.fynarfin.io

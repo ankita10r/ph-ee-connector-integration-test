@@ -5,6 +5,7 @@ import io.restassured.response.Response;
 import java.security.PublicKey;
 import java.security.cert.X509Certificate;
 import org.mifos.connector.common.channel.dto.TransactionChannelRequestDTO;
+import org.mifos.integrationtest.common.dto.kong.*;
 import org.mifos.integrationtest.config.BulkProcessorConfig;
 import org.mifos.integrationtest.config.ChannelConnectorConfig;
 import org.mifos.integrationtest.config.IdentityMapperConfig;
@@ -66,5 +67,10 @@ public class BaseStepDef {
     protected static String jwsDataSeparator = ":";
     protected static String signature;
     protected static Response restResponseObject;
+    protected static KongConsumer kongConsumer;
+    protected static KongConsumerKey kongConsumerKey;
+    protected static KongService kongService;
+    protected static KongRoute kongRoute;
+    protected static KongPlugin kongPlugin;
 
 }

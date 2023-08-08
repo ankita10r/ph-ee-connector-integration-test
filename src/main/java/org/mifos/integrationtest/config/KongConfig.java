@@ -32,6 +32,9 @@ public class KongConfig {
     @Value("${kong.endpoint.createPlugin}")
     public String createPluginEndpoint;
 
+    @Value("${kong.endpoint.createRoutePlugin}")
+    public String createRoutePluginEndpoint;
+
     @Value("${kong.endpoint.routes}")
     public String routesEndpoint;
 

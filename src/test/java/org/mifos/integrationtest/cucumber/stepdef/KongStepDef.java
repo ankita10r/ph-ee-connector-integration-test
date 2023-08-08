@@ -45,10 +45,10 @@ public class KongStepDef extends BaseStepDef {
                 .spec(new ResponseSpecBuilder().expectStatusCode(201).build()).when()
                 .post(kongConfig.consumerEndpoint).andReturn().asString();
 
-        logger.debug("Create new consumer response from kong: {}", BaseStepDef.response);
+        logger.info("Create new consumer response from kong: {}", BaseStepDef.response);
         try {
             BaseStepDef.kongConsumer = objectMapper.readValue(BaseStepDef.response, KongConsumer.class);
-            logger.debug("Kong consumer: {}", objectMapper.writeValueAsString(BaseStepDef.kongConsumer));
+            logger.info("Kong consumer: {}", objectMapper.writeValueAsString(BaseStepDef.kongConsumer));
         } catch (Exception e) {
             BaseStepDef.kongConsumer = null;
         }
@@ -70,10 +70,10 @@ public class KongStepDef extends BaseStepDef {
                 .spec(new ResponseSpecBuilder().expectStatusCode(201).build()).when()
                 .post(kongConfig.createKeyEndpoint, BaseStepDef.kongConsumer.getUsername()).andReturn().asString();
 
-        logger.debug("Create new key response from kong: {}", BaseStepDef.response);
+        logger.info("Create new key response from kong: {}", BaseStepDef.response);
         try {
             BaseStepDef.kongConsumerKey = objectMapper.readValue(BaseStepDef.response, KongConsumerKey.class);
-            logger.debug("Kong consumer key: {}", objectMapper.writeValueAsString(BaseStepDef.kongConsumerKey));
+            logger.info("Kong consumer key: {}", objectMapper.writeValueAsString(BaseStepDef.kongConsumerKey));
         } catch (Exception e) {
             BaseStepDef.kongConsumerKey = null;
         }
@@ -96,10 +96,10 @@ public class KongStepDef extends BaseStepDef {
                 .spec(new ResponseSpecBuilder().expectStatusCode(201).build()).when()
                 .post(kongConfig.servicesEndpoint).andReturn().asString();
 
-        logger.debug("Create new service response from kong: {}", BaseStepDef.response);
+        logger.info("Create new service response from kong: {}", BaseStepDef.response);
         try {
             BaseStepDef.kongService = objectMapper.readValue(BaseStepDef.response, KongService.class);
-            logger.debug("Kong service: {}", objectMapper.writeValueAsString(BaseStepDef.kongService));
+            logger.info("Kong service: {}", objectMapper.writeValueAsString(BaseStepDef.kongService));
         } catch (Exception e) {
             BaseStepDef.kongService = null;
         }
@@ -112,7 +112,7 @@ public class KongStepDef extends BaseStepDef {
         KongRoute route = new KongRoute();
         route.setId(UUID.randomUUID().toString());
         route.setName("name_"+route.getId());
-        route.setPaths(new ArrayList<>(){{ add("/actuator/health/liveness"); }});
+        route.setPaths(new ArrayList<>(){{ add("/"); }});
         route.setHosts(new ArrayList<>(){{ add(kongConfig.routeHost); }});
 
         RequestSpecification baseReqSpec = Utils.getDefaultSpec();
@@ -154,34 +154,35 @@ public class KongStepDef extends BaseStepDef {
                 .spec(new ResponseSpecBuilder().expectStatusCode(201).build()).when()
                 .post(kongConfig.createPluginEndpoint, BaseStepDef.kongService.getId()).andReturn().asString();
 
-        logger.debug("Enable key-auth plugin response from kong: {}", BaseStepDef.response);
+        logger.info("Enable key-auth plugin response from kong: {}", BaseStepDef.response);
         try {
             BaseStepDef.kongPlugin = objectMapper.readValue(BaseStepDef.response, KongPlugin.class);
-            logger.debug("Kong plugin: {}", objectMapper.writeValueAsString(BaseStepDef.kongPlugin));
+            logger.info("Kong plugin: {}", objectMapper.writeValueAsString(BaseStepDef.kongPlugin));
         } catch (Exception e) {
             BaseStepDef.kongPlugin = null;
         }
 
         assertThat(BaseStepDef.kongPlugin).isNotNull();
+
     }
 
     @Then("When I call the service endpoint with api key I should get {int}")
     public void callServiceEndpoint(int expectedStatus) {
-        logger.debug("Key: {}", BaseStepDef.kongConsumerKey.getKey());
-        logger.debug("Host: {}", kongConfig.routeHost);
+        //logger.debug("Key: {}", BaseStepDef.kongConsumerKey.getKey());
+        logger.info("Host: {}", kongConfig.routeHost);
         RequestSpecification baseReqSpec = Utils.getDefaultSpec();
         try {
             Response resp = RestAssured.given(baseReqSpec)
-                    .baseUri("http://"+kongConfig.routeHost)
-                    .header(kongConfig.apiKeyHeader, BaseStepDef.kongConsumerKey.getKey())
+                    .baseUri("https://"+kongConfig.routeHost)
+                  //  .header(kongConfig.apiKeyHeader, BaseStepDef.kongConsumerKey.getKey())
                     .expect()
                     .spec(new ResponseSpecBuilder().expectStatusCode(expectedStatus).build())
                     .when()
                     .get("/actuator/health/liveness").andReturn();
             BaseStepDef.response = resp.asString();
 
-            logger.debug("Status Code: {}", resp.getStatusCode());
-            logger.debug("Response: {}", BaseStepDef.response);
+            logger.info("Status Code: {}", resp.getStatusCode());
+            logger.info("Response: {}", BaseStepDef.response);
         } catch (Exception e) {
             e.printStackTrace();
             clearKongData();
@@ -260,4 +261,72 @@ public class KongStepDef extends BaseStepDef {
         logger.debug("Service delete response: {}", deleteResponse);
     }
 
+    @And("I add the ratelimiter plugin in above service")
+    public void enableRateLimitPlugin() throws JsonProcessingException {
+        KongPlugin kongPlugin = new KongPlugin();
+        kongPlugin.setId(UUID.randomUUID().toString());
+        kongPlugin.setName("rate-limiting");
+        kongPlugin.setEnabled(true);
+        kongPlugin.setConfig(new HashMap<>(){{
+            put("policy","cluster");
+            put("minute", 2);
+            put("limit_by", "consumer");;
+        }});
+
+        RequestSpecification baseReqSpec = Utils.getDefaultSpec();
+        BaseStepDef.response = RestAssured.given(baseReqSpec)
+                .baseUri(kongConfig.adminContactPoint)
+                .header("Content-Type", "application/json")
+                .body(objectMapper.writeValueAsString(kongPlugin)).expect()
+                .spec(new ResponseSpecBuilder().expectStatusCode(201).build()).when()
+                .post(kongConfig.createPluginEndpoint, BaseStepDef.kongService.getId()).andReturn().asString();
+
+        logger.info("Enable ratelimiter plugin response from kong: {}", BaseStepDef.response);
+        try {
+            BaseStepDef.kongPlugin = objectMapper.readValue(BaseStepDef.response, KongPlugin.class);
+            logger.info("Kong plugin: {}", objectMapper.writeValueAsString(BaseStepDef.kongPlugin));
+        } catch (Exception e) {
+            BaseStepDef.kongPlugin = null;
+        }
+
+        assertThat(BaseStepDef.kongPlugin).isNotNull();
+    }
+
+    @And("I add the ratelimiter plugin in kong")
+    public void iAddTheRatelimiterPluginInKong() throws JsonProcessingException {
+        KongPlugin kongPlugin = new KongPlugin();
+        kongPlugin.setId(UUID.randomUUID().toString());
+        kongPlugin.setName("rate-limiting");
+        kongPlugin.setEnabled(true);
+        kongPlugin.setConfig(new HashMap<>(){{
+            put("policy","cluster");
+            put("second", 1);
+            put("minute", 5);
+            put("limit_by", "consumer");
+        }});
+
+        RequestSpecification baseReqSpec = Utils.getDefaultSpec();
+        BaseStepDef.response = RestAssured.given(baseReqSpec)
+                .baseUri(kongConfig.adminContactPoint)
+                .header("Content-Type", "application/json")
+                .body(objectMapper.writeValueAsString(kongPlugin)).expect()
+                .spec(new ResponseSpecBuilder().expectStatusCode(201).build()).when()
+                .post(kongConfig.pluginsEndpoint).andReturn().asString();
+
+        logger.info("Creating ratelimiter plugin response from kong: {}", BaseStepDef.response);
+        try {
+            BaseStepDef.kongPlugin = objectMapper.readValue(BaseStepDef.response, KongPlugin.class);
+            logger.info("Kong plugin: {}", objectMapper.writeValueAsString(BaseStepDef.kongPlugin));
+        } catch (Exception e) {
+            BaseStepDef.kongPlugin = null;
+        }
+
+        assertThat(BaseStepDef.kongPlugin).isNotNull();
+    }
+
+    @And("I should have {string} in response body")
+    public void iShouldHaveInResponseBody(String expectedResponse) {
+        assertThat(BaseStepDef.response).contains(expectedResponse);
+    }
 }
+

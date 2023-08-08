@@ -88,6 +88,7 @@ kong:
     services: /services
     createRoute: /services/{serviceId}/routes
     createPlugin: /services/{serviceId}/plugins
+    createRoutePlugin: /routes/{serviceId}/plugins
     routes: /routes
     plugins: /plugins
   header:

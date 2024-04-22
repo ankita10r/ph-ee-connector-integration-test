@@ -15,6 +15,7 @@ import com.github.tomakehurst.wiremock.stubbing.ServeEvent;
 import io.cucumber.core.internal.com.fasterxml.jackson.core.JsonProcessingException;
 import io.cucumber.core.internal.com.fasterxml.jackson.databind.JsonNode;
 import io.cucumber.java.en.And;
+import io.cucumber.java.en.Given;
 import io.cucumber.java.en.Then;
 import io.cucumber.java.en.When;
 import io.restassured.RestAssured;
@@ -28,10 +29,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 import org.mifos.connector.common.channel.dto.PhErrorDTO;
 import org.mifos.integrationtest.common.Utils;
-import org.mifos.integrationtest.common.dto.Alias;
-import org.mifos.integrationtest.common.dto.Bill;
-import org.mifos.integrationtest.common.dto.BillRTPReqDTO;
-import org.mifos.integrationtest.common.dto.PayerFSPDetail;
+import org.mifos.integrationtest.common.dto.*;
 import org.mifos.integrationtest.common.dto.billpayp2g.BillPaymentsReqDTO;
 import org.mifos.integrationtest.config.BillPayConnectorConfig;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -45,15 +43,18 @@ public class BillPayStepDef extends BaseStepDef {
     private BillPayConnectorConfig billPayConnectorConfig;
     private static String billerId;
     private static BillRTPReqDTO billRTPReqDTO;
+
+    private static BillStatusReqDTO billStatusReqDTO;
     private static String billId = "12345";
     private static String rtpId = "123456";
     private static String rtpResponse;
+    private static String statusResponse;
 
     @Then("I can create DTO for Biller RTP Request")
     public void iCanCreateDTOForBillerRTPRequest() {
         Bill bill = new Bill("Test", 100.0);
         PayerFSPDetail payerFSPDetail = new PayerFSPDetail("lion", "1223455");
-        billRTPReqDTO = new BillRTPReqDTO("123445", billId, "00", payerFSPDetail, bill);
+        billRTPReqDTO = new BillRTPReqDTO("123445", scenarioScopeState.billId, "00", payerFSPDetail, bill);
 
     }
 
@@ -204,7 +205,7 @@ public class BillPayStepDef extends BaseStepDef {
             List<ServeEvent> allServeEvents = getAllServeEvents();
             for (int i = allServeEvents.size() - 1; i >= 0; i--) {
                 ServeEvent request = allServeEvents.get(i);
-                if (!(request.getRequest().getBodyAsString()).isEmpty()) {
+                if (!(request.getRequest().getBodyAsString()).isEmpty() && request.getRequest().getUrl().equals("/billInquiry")) {
                     JsonNode rootNode = null;
                     flag = true;
                     try {
@@ -244,7 +245,7 @@ public class BillPayStepDef extends BaseStepDef {
             List<ServeEvent> allServeEvents = getAllServeEvents();
             for (int i = allServeEvents.size() - 1; i >= 0; i--) {
                 ServeEvent request = allServeEvents.get(i);
-                if (!(request.getRequest().getBodyAsString()).isEmpty()) {
+                if (!(request.getRequest().getBodyAsString()).isEmpty() && request.getRequest().getUrl().equals("/billNotification")) {
                     JsonNode rootNode = null;
                     flag = true;
                     try {
@@ -283,6 +284,7 @@ public class BillPayStepDef extends BaseStepDef {
         ObjectMapper objectMapper = new ObjectMapper();
         String jsonPayload = objectMapper.writeValueAsString(billRTPReqDTO);
         RequestSpecification requestSpec = Utils.getDefaultSpec();
+        requestSpec.header("X-CorrelationID", scenarioScopeState.clientCorrelationId);
         scenarioScopeState.response = RestAssured.given(requestSpec).header("Content-Type", "application/json")
                 .header("X-Callback-URL", billPayConnectorConfig.callbackURL + stub).header("X-Biller-Id", billerId)
                 .header("X-Client-Correlation-ID", scenarioScopeState.clientCorrelationId)
@@ -319,6 +321,7 @@ public class BillPayStepDef extends BaseStepDef {
                         String requestId = null;
                         if (rootNode.has("requestId")) {
                             requestId = rootNode.get("requestId").asText();
+                            scenarioScopeState.requestId = requestId;
                         }
                         assertThat(requestId).isNotEmpty();
                         String rtpStatus = null;
@@ -329,6 +332,7 @@ public class BillPayStepDef extends BaseStepDef {
                         String rtpId = null;
                         if (rootNode.has("rtpId")) {
                             rtpId = rootNode.get("rtpId").asText();
+                            scenarioScopeState.rtpId = rtpId;
                         }
                         assertThat(rtpId).isNotEmpty();
                         String billId = null;
@@ -351,7 +355,8 @@ public class BillPayStepDef extends BaseStepDef {
             List<ServeEvent> allServeEvents = getAllServeEvents();
             for (int i = allServeEvents.size() - 1; i >= 0; i--) {
                 ServeEvent request = allServeEvents.get(i);
-                if (!(request.getRequest().getBodyAsString()).isEmpty()) {
+                if (!(request.getRequest().getBodyAsString()).isEmpty()
+                        && request.getRequest().getUrl().equals("/billInquiryPrefixInvalid")) {
                     JsonNode rootNode = null;
                     flag = true;
                     try {
@@ -387,7 +392,7 @@ public class BillPayStepDef extends BaseStepDef {
             List<ServeEvent> allServeEvents = getAllServeEvents();
             for (int i = allServeEvents.size() - 1; i >= 0; i--) {
                 ServeEvent request = allServeEvents.get(i);
-                if (!(request.getRequest().getBodyAsString()).isEmpty()) {
+                if (!(request.getRequest().getBodyAsString()).isEmpty() && request.getRequest().getUrl().equals("/invalidbillInquiry")) {
                     JsonNode rootNode = null;
                     flag = true;
                     try {
@@ -430,7 +435,7 @@ public class BillPayStepDef extends BaseStepDef {
             List<ServeEvent> allServeEvents = getAllServeEvents();
             for (int i = allServeEvents.size() - 1; i >= 0; i--) {
                 ServeEvent request = allServeEvents.get(i);
-                if (!(request.getRequest().getBodyAsString()).isEmpty()) {
+                if (!(request.getRequest().getBodyAsString()).isEmpty() && request.getRequest().getUrl().equals("/billInquiryEmpty")) {
                     JsonNode rootNode = null;
                     flag = true;
                     try {
@@ -488,7 +493,7 @@ public class BillPayStepDef extends BaseStepDef {
             List<ServeEvent> allServeEvents = getAllServeEvents();
             for (int i = allServeEvents.size() - 1; i >= 0; i--) {
                 ServeEvent request = allServeEvents.get(i);
-                if (!(request.getRequest().getBodyAsString()).isEmpty()) {
+                if (!(request.getRequest().getBodyAsString()).isEmpty() && request.getRequest().getUrl().equals("/billNotificationPaid")) {
                     JsonNode rootNode = null;
                     flag = true;
                     try {
@@ -555,7 +560,8 @@ public class BillPayStepDef extends BaseStepDef {
             List<ServeEvent> allServeEvents = getAllServeEvents();
             for (int i = allServeEvents.size() - 1; i >= 0; i--) {
                 ServeEvent request = allServeEvents.get(i);
-                if (!(request.getRequest().getBodyAsString()).isEmpty()) {
+                if (!(request.getRequest().getBodyAsString()).isEmpty()
+                        && request.getRequest().getUrl().equals("/billNotificationsTimeout")) {
                     JsonNode rootNode = null;
                     flag = true;
                     try {
@@ -623,7 +629,7 @@ public class BillPayStepDef extends BaseStepDef {
     public void iCanCreateDTOForBillerRTPRequestToMockPayerFspFailedToDebitAmount() {
         Bill bill = new Bill("Test", 100.0);
         PayerFSPDetail payerFSPDetail = new PayerFSPDetail("rhino", "1223334444");
-        billRTPReqDTO = new BillRTPReqDTO("123445", billId, "00", payerFSPDetail, bill);
+        billRTPReqDTO = new BillRTPReqDTO(scenarioScopeState.clientCorrelationId, scenarioScopeState.billId, "00", payerFSPDetail, bill);
     }
 
     @And("I can extract the error from response body and assert the error information as {string}")
@@ -676,6 +682,34 @@ public class BillPayStepDef extends BaseStepDef {
             JSONObject jsonObject = new JSONObject(scenarioScopeState.response);
             scenarioScopeState.transactionId = jsonObject.getString("error");
             assertThat(scenarioScopeState.transactionId.equals("Invalid Request: Bill Id Empty")).isTrue();
+        });
+    }
+
+    @Given("I can create a request for status api")
+    public void iCanCreateARequestForStatusApi() {
+        billStatusReqDTO = new BillStatusReqDTO(scenarioScopeState.rtpId, scenarioScopeState.requestId);
+
+    }
+
+    @And("I can call the biller RTP status API with expected status of {int} until I get the rtpStatus as {string}")
+    public void iCanCallTheBillerRTPStatusAPIWithExpectedStatusOf(int expectedStatus, String status)
+            throws com.fasterxml.jackson.core.JsonProcessingException {
+        await().atMost(awaitMost, SECONDS).pollDelay(pollDelay, SECONDS).pollInterval(pollInterval, SECONDS).untilAsserted(() -> {
+            ObjectMapper objectMapper = new ObjectMapper();
+            String jsonPayload = objectMapper.writeValueAsString(billStatusReqDTO);
+            RequestSpecification requestSpec = Utils.getDefaultSpec(scenarioScopeState.tenant);
+            requestSpec.header("X-CorrelationID", "123");
+            requestSpec.header("billId", scenarioScopeState.billId);
+            String endpoint = billPayConnectorConfig.statusEndpoint;
+            endpoint = endpoint.replaceAll("\\{\\{correlationId\\}\\}", scenarioScopeState.clientCorrelationId);
+            scenarioScopeState.response = RestAssured.given(requestSpec).header("Content-Type", "application/json")
+                    .header("X-Biller-Id", billerId).header("X-CorrelationID", scenarioScopeState.clientCorrelationId)
+                    .baseUri(billPayConnectorConfig.billPayContactPoint).body(jsonPayload).expect()
+                    .spec(new ResponseSpecBuilder().expectStatusCode(expectedStatus).build()).when().get(endpoint).andReturn().asString();
+
+            statusResponse = scenarioScopeState.response;
+            logger.info("Status Response: {}", scenarioScopeState.response);
+            assertThat(scenarioScopeState.response.contains(status)).isTrue();
         });
     }
 }

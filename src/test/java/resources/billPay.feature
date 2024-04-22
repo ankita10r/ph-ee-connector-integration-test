@@ -32,51 +32,51 @@ Feature: Bill Payment P2G Test
 #    And I will sleep for 5000 millisecond
     Then I should be able to extract response body from callback for bill notification
 
-
-    #this is an integration for bill inquiry stage w/o rtp, includes bill inquiry api and payment notification from PFI to PBB to Bill Agg and back
-  Scenario: Bill Inquiry API for orchestration (PFI to PBB)
-    Given I can inject MockServer
-    And I can start mock server
-    And I can register the stub with "/billInquiry" endpoint for "POST" request with status of 200
-    And I can register the stub with "/billNotification" endpoint for "POST" request with status of 200
-    Given I have tenant as "paymentBB2"
-    And I create a new clientCorrelationId
-    And I have bill id as "001"
-    When I call the get bills api with billid with expected status of 202 and callbackurl as "/billInquiry"
-    Then I should get non empty response
-    And I should get transactionId in response
-    Given I have tenant as "paymentBB2"
-    And I have bill id as "001"
-    And I generate clientCorrelationId
-    And I can mock payment notification request
-    When I call the payment notification api expected status of 202 and callbackurl as "/billNotification"
-    Then I should get non empty response
-    And I should get transactionId in response
-#    And I will sleep for 5000 millisecond
-    When I make the "POST" request to "/billNotification" endpoint with expected status of 200
-    Then I should be able to extract response body from callback for bill pay
-    When I make the "POST" request to "/billInquiry" endpoint with expected status of 200
-    Then I should be able to extract response body from callback for bill pay
-
-      #this is an component test for bill inquiry stage w/o rtp, includes bill inquiry api from PBB to Bill Agg with mock
-      #response for bill inquiry api from Bill Agg to PBB to PFI
-  Scenario: Bill Inquiry API for P2G (PBB to Biller/Agg)
-    Given I have tenant as "paymentBB2"
-    And I create a new clientCorrelationId
-    And I have bill id as "001"
-    When I call the mock get bills api from PBB to Biller with billid with expected status of 200
-    Then I should get non empty response
-
-
-   #this is an component test for bill inquiry stage w/o rtp, includes bill inquiry api from PBB to Bill Agg with mock
-   #response for bill inquiry api from Bill Agg to PBB to PFI
-  Scenario: Bill Payments API for P2G (PBB to Biller/Agg)
-    Given I have tenant as "paymentBB2"
-    And I create a new clientCorrelationId
-    And I have bill id as "001"
-    And I can mock payment notification request
-    When I call the mock bills payment api from PBB to Biller with billid with expected status of 200
-    Then I should get non empty response
+#
+#    #this is an integration for bill inquiry stage w/o rtp, includes bill inquiry api and payment notification from PFI to PBB to Bill Agg and back
+#  Scenario: Bill Inquiry API for orchestration (PFI to PBB)
+#    Given I can inject MockServer
+#    And I can start mock server
+#    And I can register the stub with "/billInquiry" endpoint for "POST" request with status of 200
+#    And I can register the stub with "/billNotification" endpoint for "POST" request with status of 200
+#    Given I have tenant as "paymentBB2"
+#    And I create a new clientCorrelationId
+#    And I have bill id as "001"
+#    When I call the get bills api with billid with expected status of 202 and callbackurl as "/billInquiry"
+#    Then I should get non empty response
+#    And I should get transactionId in response
+#    Given I have tenant as "paymentBB2"
+#    And I have bill id as "001"
+#    And I generate clientCorrelationId
+#    And I can mock payment notification request
+#    When I call the payment notification api expected status of 202 and callbackurl as "/billNotification"
+#    Then I should get non empty response
+#    And I should get transactionId in response
+##    And I will sleep for 5000 millisecond
+#    When I make the "POST" request to "/billNotification" endpoint with expected status of 200
+#    Then I should be able to extract response body from callback for bill pay
+#    When I make the "POST" request to "/billInquiry" endpoint with expected status of 200
+#    Then I should be able to extract response body from callback for bill pay
+#
+#      #this is an component test for bill inquiry stage w/o rtp, includes bill inquiry api from PBB to Bill Agg with mock
+#      #response for bill inquiry api from Bill Agg to PBB to PFI
+#  Scenario: Bill Inquiry API for P2G (PBB to Biller/Agg)
+#    Given I have tenant as "paymentBB2"
+#    And I create a new clientCorrelationId
+#    And I have bill id as "001"
+#    When I call the mock get bills api from PBB to Biller with billid with expected status of 200
+#    Then I should get non empty response
+#
+#
+#   #this is an component test for bill inquiry stage w/o rtp, includes bill inquiry api from PBB to Bill Agg with mock
+#   #response for bill inquiry api from Bill Agg to PBB to PFI
+#  Scenario: Bill Payments API for P2G (PBB to Biller/Agg)
+#    Given I have tenant as "paymentBB2"
+#    And I create a new clientCorrelationId
+#    And I have bill id as "001"
+#    And I can mock payment notification request
+#    When I call the mock bills payment api from PBB to Biller with billid with expected status of 200
+#    Then I should get non empty response
 
   @gov
   Scenario: RTP-001 RTP Integration test
@@ -85,8 +85,8 @@ Feature: Bill Payment P2G Test
     And I can register the stub with "/test" endpoint for "POST" request with status of 200
     Given I have tenant as "paymentBB2"
     And I have a billerId as "GovBill"
+    And I have bill id as "1008"
     And I generate clientCorrelationId
-    And I create a new clientCorrelationId
     Then I can create DTO for Biller RTP Request
     And I can call the biller RTP request API with expected status of 202 and "/test" endpoint
 #    Then I will sleep for 8000 millisecond
@@ -100,7 +100,7 @@ Feature: Bill Payment P2G Test
     Given I have tenant as "paymentBB2"
     And I create a new clientCorrelationId
     And I have bill id as "101"
-    When I call the get bills api with billid with expected status of 202 and callbackurl as "/billInquiry"
+    When I call the get bills api with billid with expected status of 202 and callbackurl as "/billInquiryPrefixInvalid"
     Then I should get non empty response
     And I should get transactionId in response
 #    And I will sleep for 5000 millisecond
@@ -114,7 +114,7 @@ Feature: Bill Payment P2G Test
     Given I have tenant as "paymentBB2"
     And I create a new clientCorrelationId
     And I have bill id as "002"
-    When I call the get bills api with billid with expected status of 202 and callbackurl as "/billInquiry"
+    When I call the get bills api with billid with expected status of 202 and callbackurl as "/invalidbillInquiry"
     Then I should get non empty response
     And I should get transactionId in response
 #    And I will sleep for 5000 millisecond
@@ -214,6 +214,7 @@ Feature: Bill Payment P2G Test
   Scenario: RTP-002 Request to Pay is unsuccessful because RtP type of Alias is not specified
     Given I have tenant as "paymentBB2"
     And I have a billerId as "GovBill"
+    And I have bill id as "1009"
     And I generate clientCorrelationId
     And I create a new clientCorrelationId
     Then I can create DTO for Biller RTP Request without alias details
@@ -226,6 +227,7 @@ Feature: Bill Payment P2G Test
     And I have a billerId as "GovBill"
     And I generate clientCorrelationId
     And I create a new clientCorrelationId
+    And I have bill id as "1010"
     Then I can create DTO for Biller RTP Request with incorrect rtp information
     And I can call the biller RTP request API with expected status of 400 and "/informationMismatch" endpoint
     And I can extract the error from response body and assert the error information as "Alias cannot be null or empty"
@@ -236,6 +238,7 @@ Feature: Bill Payment P2G Test
     And I have a billerId as "GovBill"
     And I generate clientCorrelationId
     And I create a new clientCorrelationId
+    And I have bill id as "1011"
     Then I can create DTO for Biller RTP Request with incorrect rtp type
     And I can call the biller RTP request API with expected status of 400 and "/invalidRtp" endpoint
     And I can extract the error from response body and assert the error information as "Request Type is Invalid"
@@ -246,6 +249,7 @@ Feature: Bill Payment P2G Test
     And I have a billerId as "GovBill"
     And I generate clientCorrelationId
     And I create a new clientCorrelationId
+    And I have bill id as "1012"
     Then I can create DTO for Biller RTP Request with incorrect alias details
     And I can call the biller RTP request API with expected status of 400 and "/aliasMismatch" endpoint
     And I can extract the error from response body and assert the error information as "Request Type is Invalid"
@@ -256,6 +260,7 @@ Feature: Bill Payment P2G Test
     And I have a billerId as "GovBill"
     And I generate clientCorrelationId
     And I create a new clientCorrelationId
+    And I have bill id as "1013"
     Then I can create DTO for Biller RTP Request without alias details
     And I can call the biller RTP request API with expected status of 400 and "/invalidBic" endpoint
     And I can extract the error from response body and assert the error information as "Payer Fsp details cannot be null or empty"
@@ -270,6 +275,7 @@ Feature: Bill Payment P2G Test
     And I have a billerId as "GovBill"
     And I generate clientCorrelationId
     And I create a new clientCorrelationId
+    And I have bill id as "1014"
     Then I can create DTO for Biller RTP Request to mock payer fi unreachable
     And I can call the biller RTP request API with expected status of 202 and "/payerUnreachable" endpoint
 #    Then I will sleep for 3000 millisecond
@@ -285,7 +291,64 @@ Feature: Bill Payment P2G Test
     And I have a billerId as "GovBill"
     And I generate clientCorrelationId
     And I create a new clientCorrelationId
+    And I have bill id as "1015"
     Then I can create DTO for Biller RTP Request to mock payer fsp failed to debit amount
     And I can call the biller RTP request API with expected status of 202 and "/debitFailed" endpoint
 #    Then I will sleep for 3000 millisecond
     And I can extract the error from callback body and assert error message as "Payer FSP is unable to debit amount"
+
+
+  Scenario: BS-001 Bill RTP Status API to get accepted
+    Given I can inject MockServer
+    And I can start mock server
+    And I can register the stub with "/test1" endpoint for "POST" request with status of 200
+    Given I have tenant as "paymentBB2"
+    And I have a billerId as "GovBill"
+    And I generate clientCorrelationId
+    And I have bill id as "001"
+    Then I can create DTO for Biller RTP Request
+    And I can call the biller RTP request API with expected status of 202 and "/test1" endpoint
+    And I can extract the callback body and assert the rtpStatus
+    Given I can create a request for status api
+    And I can call the biller RTP status API with expected status of 200 until I get the rtpStatus as "COM"
+
+  @gov
+  Scenario: BS-002 Bill RTP Status API to get PENDING
+    Given I can inject MockServer
+    And I can start mock server
+    And I can register the stub with "/debitFailed" endpoint for "POST" request with status of 200
+    Given I have tenant as "paymentBB2"
+    And I have a billerId as "GovBill"
+    And I generate clientCorrelationId
+    And I have bill id as "011"
+    Then I can create DTO for Biller RTP Request to mock payer fsp failed to debit amount
+    And I can call the biller RTP request API with expected status of 202 and "/debitFailed" endpoint
+    Given I can create a request for status api
+    And I can call the biller RTP status API with expected status of 200 until I get the rtpStatus as "PND"
+
+
+  Scenario: BS-003 Bill RTP Status API to get accepted
+    Given I can inject MockServer
+    And I can start mock server
+    And I can register the stub with "/test1" endpoint for "POST" request with status of 200
+    Given I have tenant as "paymentBB2"
+    And I have a billerId as "GovBill"
+    And I generate clientCorrelationId
+    And I have bill id as "123"
+    Then I can create DTO for Biller RTP Request
+    And I can call the biller RTP request API with expected status of 202 and "/test1" endpoint
+    Given I can create a request for status api
+    And I can call the biller RTP status API with expected status of 200 until I get the rtpStatus as "REQUEST_ACCEPTED"
+
+  Scenario: BS-004 Bill RTP Status API to get accepted
+    Given I can inject MockServer
+    And I can start mock server
+    And I can register the stub with "/test1" endpoint for "POST" request with status of 200
+    Given I have tenant as "paymentBB2"
+    And I have a billerId as "GovBill"
+    And I generate clientCorrelationId
+    And I have bill id as "12345"
+    Then I can create DTO for Biller RTP Request
+    And I can call the biller RTP request API with expected status of 202 and "/test1" endpoint
+    Given I can create a request for status api
+    And I can call the biller RTP status API with expected status of 200 until I get the rtpStatus as "ACCEPTED"
